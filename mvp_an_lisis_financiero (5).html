@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SaaS de Análisis Financiero Simplificado</title>
+    <!-- Tailwind CSS para diseño rápido, moderno y responsive -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts para una tipografía profesional -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* =========================================
+           BLOQUE DE ESTILOS PERSONALIZADOS
+           ========================================= */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* Color de fondo gris muy claro */
+        }
+        
+        /* Animación suave para la barra de salud financiera */
+        .health-bar-fill {
+            transition: width 1s ease-in-out, background-color 0.5s ease;
+        }
+
+        /* Estilos para el scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+</head>
+<body class="text-slate-800 antialiased">
+
+    <!-- =========================================
+         BARRA DE NAVEGACIÓN SUPERIOR
+         ========================================= -->
+    <header class="bg-white shadow-sm sticky top-0 z-10">
+        <div class="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center gap-2">
+                <!-- Ícono de logo -->
+                <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+                </div>
+                <h1 class="text-xl font-bold text-slate-800">Inver<span class="text-blue-600">Simples</span></h1>
+            </div>
+            <button onclick="openModal()" class="text-sm font-semibold text-blue-600 hover:text-blue-800 transition-colors hidden sm:block">
+                Ver Planes
+            </button>
+        </div>
+    </header>
+
+    <!-- =========================================
+         CONTENEDOR PRINCIPAL DEL APP
+         ========================================= -->
+    <main class="max-w-6xl mx-auto px-4 py-8 flex flex-col md:flex-row gap-8">
+        
+        <!-- SIDEBAR: Selector de Empresas -->
+        <aside class="w-full md:w-1/4">
+            <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-4 sticky top-24">
+                <h2 class="text-xs uppercase tracking-wider font-bold text-slate-400 mb-4">Empresas Analizadas</h2>
+                <!-- Aquí se inyectarán los botones de las empresas dinámicamente -->
+                <div id="company-list" class="flex flex-col gap-2">
+                    <div class="text-center text-slate-500 py-4">Cargando empresas...</div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- ÁREA PRINCIPAL: Panel de Datos de la Empresa -->
+        <section class="w-full md:w-3/4">
+            
+            <!-- Estado de carga -->
+            <div id="loading-state" class="flex flex-col items-center justify-center py-20 text-slate-400">
+                <svg class="animate-spin h-10 w-10 mb-4 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <p>Obteniendo datos financieros...</p>
+            </div>
+
+            <!-- Contenido del Informe (Oculto hasta que cargue) -->
+            <div id="report-content" class="hidden">
+                
+                <!-- Cabecera de la Empresa y Barra de Salud -->
+                <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6 md:p-8 mb-6">
+                    <div class="flex justify-between items-start mb-6">
+                        <div>
+                            <h2 id="display-company-name" class="text-3xl font-bold text-slate-800">Nombre de Empresa</h2>
+                            <p id="display-company-sector" class="text-slate-500 mt-1">Análisis al último trimestre</p>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-xs font-bold uppercase text-slate-400">Puntaje General</span>
+                            <div class="text-3xl font-black" id="display-health-score-text">--/100</div>
+                        </div>
+                    </div>
+
+                    <!-- BARRA DE SALUD FINANCIERA -->
+                    <div>
+                        <div class="flex justify-between text-sm font-semibold mb-2">
+                            <span class="text-red-500">Riesgo Alto (0)</span>
+                            <span class="text-green-500">Excelente (100)</span>
+                        </div>
+                        <div class="w-full bg-slate-200 rounded-full h-4 overflow-hidden">
+                            <!-- La barra que se llena -->
+                            <div id="health-bar" class="health-bar-fill h-4 rounded-full bg-slate-300" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Grid de Ratios Financieros -->
+                <div class="mb-8">
+                    <h3 class="text-lg font-bold text-slate-800 mb-4">Indicadores Clave en Lenguaje Sencillo</h3>
+                    <!-- Aquí se inyectarán las tarjetas de los ratios -->
+                    <div id="ratios-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Las tarjetas se generan vía JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Botón de Upsell al Plan Pro -->
+                <div class="bg-gradient-to-r from-slate-800 to-slate-900 rounded-xl p-8 text-center text-white shadow-lg">
+                    <h3 class="text-2xl font-bold mb-3">¿Quieres llevar tus inversiones al siguiente nivel?</h3>
+                    <p class="text-slate-300 mb-6 max-w-xl mx-auto">
+                        Este reporte es solo el principio. Únete a nuestra comunidad Pro y accede al mercado completo con herramientas profesionales simplificadas.
+                    </p>
+                    <button onclick="openModal()" class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-8 rounded-lg shadow-md transition-transform transform hover:scale-105">
+                        Acceder a la Versión Pro 🔥
+                    </button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- =========================================
+         POP-UP / MODAL (VERSIÓN PRO) - Fake Door
+         ========================================= -->
+    <div id="pro-modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden transform scale-95 transition-transform duration-300" id="pro-modal-content">
+            
+            <!-- Cabecera del Modal -->
+            <div class="bg-slate-50 p-6 border-b border-slate-100 flex justify-between items-center">
+                <h3 class="text-2xl font-bold text-slate-800">Próximamente: <span class="text-blue-600">Plan Pro</span></h3>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            
+            <!-- Cuerpo del Modal -->
+            <div class="p-6">
+                <p class="text-slate-600 mb-6">Estamos desarrollando la plataforma definitiva para inversores. Esto es lo que incluirá el acceso Pro:</p>
+                
+                <ul class="space-y-3 mb-8">
+                    <li class="flex items-start">
+                        <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                        <span class="text-slate-700">Análisis detallado de <strong>+10 empresas de la BVL</strong>.</span>
+                    </li>
+                    <li class="flex items-start">
+                        <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                        <span class="text-slate-700">Análisis financiero de <strong>+10 empresas líderes de EE.UU.</strong></span>
+                    </li>
+                    <li class="flex items-start">
+                        <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                        <span class="text-slate-700">Comparador automático de empresas del mismo sector.</span>
+                    </li>
+                    <li class="flex items-start">
+                        <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                        <span class="text-slate-700">Blog personal semanal privado con mis tesis de inversión.</span>
+                    </li>
+                    <li class="flex items-start">
+                        <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                        <span class="text-slate-700"><strong>Asesorías personalizadas</strong>: 30 minutos al mes uno a uno.</span>
+                    </li>
+                </ul>
+
+                <!-- 
+                  NOTA IMPORTANTE PARA MONETIZACIÓN:
+                  Para que te lleguen los correos sin programar un backend, ve a https://formspree.io/
+                  Crea una cuenta gratis, crea un formulario, copia el link que te dan 
+                  (algo como https://formspree.io/f/abcd123) y pégalo en el 'action' de abajo.
+                -->
+                <div class="bg-blue-50 rounded-xl p-4 border border-blue-100">
+                    <p class="text-sm text-blue-800 font-semibold mb-3">Déjanos tu correo para avisarte del lanzamiento y recibir un descuento especial.</p>
+                    
+                    <form action="https://formspree.io/f/mdarazqw" method="POST" class="flex flex-col sm:flex-row gap-2">
+                        <input type="email" name="email" required placeholder="ejemplo@hotmail.comm" class="flex-1 px-4 py-2 rounded-lg border border-slate-300 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+                        <input type="hidden" name="origen" value="Intento_Compra_Pro">
+                        <button type="submit" class="bg-slate-800 hover:bg-slate-700 text-white font-bold py-2 px-6 rounded-lg transition-colors">
+                            Avisarme
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- =========================================
+         BLOQUE DE CÓDIGO JAVASCRIPT (LÓGICA)
+         ========================================= -->
+    <script>
+        // Estado de la aplicación
+        let currentCompany = ""; // Empresa seleccionada actualmente
+
+        /**
+         * 1. BASE DE DATOS LOCAL (Hardcoded MVP)
+         * Toda la información está directamente en el código para máxima velocidad 
+         * y evitar dependencias externas.
+         */
+        const appData = {
+            "Ferreycorp": {
+                salud: 85,
+                sector: "Industrial / Maquinaria",
+                ratios: [
+                    { nombre: "ROE (Rentabilidad)", valor: "16.5%", estado: "verde", interpretacion: "Excelente retorno. Por cada S/100 que invierten los accionistas, la empresa genera S/16.5 de ganancia pura." },
+                    { nombre: "Deuda / Patrimonio", valor: "0.85", estado: "amarillo", interpretacion: "Nivel de deuda controlable. Debe S/85 a los bancos por cada S/100 de capital propio. Riesgo moderado." },
+                    { nombre: "Liquidez Corriente", valor: "1.40", estado: "verde", interpretacion: "Caja saludable. Tiene S/1.40 en efectivo y bienes rápidos para pagar cada S/1.00 de deuda a corto plazo." },
+                    { nombre: "Margen Neto", valor: "6.2%", estado: "amarillo", interpretacion: "Margen estable. De cada S/100 que vende en maquinaria pesada, S/6.2 van directo al bolsillo tras impuestos." }
+                ]
+            },
+            "Alicorp": {
+                salud: 55,
+                sector: "Consumo Masivo",
+                ratios: [
+                    { nombre: "ROE (Rentabilidad)", valor: "8.5%", estado: "amarillo", interpretacion: "Rentabilidad presionada. Sus márgenes de ganancia han bajado por el costo de las materias primas (trigo, soya)." },
+                    { nombre: "Deuda / Patrimonio", valor: "1.60", estado: "rojo", interpretacion: "Alto endeudamiento. Las deudas superan su patrimonio (1.6 veces). Gran parte de sus ganancias se va en pagar intereses." },
+                    { nombre: "Liquidez Corriente", valor: "1.10", estado: "amarillo", interpretacion: "Liquidez muy ajustada. Apenas tiene lo suficiente para cubrir sus facturas de los próximos 12 meses." },
+                    { nombre: "Margen Neto", valor: "3.5%", estado: "rojo", interpretacion: "Eficiencia baja. Por ser consumo masivo vende mucho, pero se queda con muy poco beneficio final (solo 3.5%)." }
+                ]
+            },
+            "InRetail": {
+                salud: 75,
+                sector: "Retail / Supermercados",
+                ratios: [
+                    { nombre: "ROE (Rentabilidad)", valor: "12.0%", estado: "amarillo", interpretacion: "Buena eficiencia. Genera retornos sólidos considerando que los supermercados (Plaza Vea) manejan márgenes pequeños." },
+                    { nombre: "Deuda / Patrimonio", valor: "1.25", estado: "amarillo", interpretacion: "Apalancamiento moderado. Usa deuda estratégicamente para seguir abriendo nuevas tiendas Makro y farmacias." },
+                    { nombre: "Liquidez Corriente", valor: "0.85", estado: "rojo", interpretacion: "Típico del sector Retail. Parece malo, pero es porque cobran rápido al cliente y le pagan a 90 días a sus proveedores." },
+                    { nombre: "Margen de Caja Libre", valor: "5.8%", estado: "verde", interpretacion: "Excelente máquina de efectivo. Logran convertir casi el 6% de sus ventas en dinero libre y contante para los dueños." }
+                ]
+            },
+            "BCP (Credicorp)": {
+                salud: 90,
+                sector: "Financiero / Bancos",
+                ratios: [
+                    { nombre: "ROE (Rentabilidad)", valor: "18.2%", estado: "verde", interpretacion: "Alta rentabilidad. El banco es extremadamente eficiente multiplicando el dinero de sus operaciones crediticias." },
+                    { nombre: "Ratio de Capital (BIS)", valor: "15.5%", estado: "verde", interpretacion: "Sólida solvencia. Está muy por encima del mínimo exigido por los reguladores, por lo que su riesgo de quiebra es mínimo." },
+                    { nombre: "Ratio de Morosidad", valor: "3.2%", estado: "amarillo", interpretacion: "Ligeramente alta por la desaceleración económica de las personas, pero el banco tiene reservas suficientes para cubrirlo." },
+                    { nombre: "Margen Neto", valor: "22.0%", estado: "verde", interpretacion: "Excelente capacidad para convertir los intereses que cobra por los préstamos en ganancias puras." }
+                ]
+            },
+            "Aceros Arequipa": {
+                salud: 60,
+                sector: "Materiales y Construcción",
+                ratios: [
+                    { nombre: "ROE (Rentabilidad)", valor: "7.5%", estado: "rojo", interpretacion: "Negocio cíclico golpeado. La caída del sector construcción ha reducido fuertemente su retorno sobre el capital." },
+                    { nombre: "Deuda / Patrimonio", valor: "0.95", estado: "amarillo", interpretacion: "Deuda bajo control. Pidieron préstamos fuertes para su nueva planta, pero su patrimonio los respalda bien." },
+                    { nombre: "Liquidez Corriente", valor: "1.35", estado: "verde", interpretacion: "Cubre sus obligaciones sin problemas inmediatos. Tienen inventario y caja suficiente para pasar el año." },
+                    { nombre: "Margen Neto", valor: "4.0%", estado: "rojo", interpretacion: "Márgenes muy golpeados por la caída internacional de los precios del acero y menores volúmenes de venta." }
+                ]
+            }
+        };
+
+        /**
+         * 2. LÓGICA PRINCIPAL: INICIO DE LA APLICACIÓN
+         */
+        document.addEventListener('DOMContentLoaded', () => {
+            // Un pequeño retraso simulado (medio segundo) para que la animación de carga se luzca
+            setTimeout(() => {
+                document.getElementById('loading-state').style.display = 'none';
+                document.getElementById('report-content').classList.remove('hidden');
+                
+                renderSidebar();
+                
+                // Seleccionar la primera empresa por defecto
+                const firstCompany = Object.keys(appData)[0];
+                if (firstCompany) selectCompany(firstCompany);
+            }, 500);
+        });
+
+        /**
+         * 3. INTERFAZ: RENDERIZAR MENÚ LATERAL
+         */
+        function renderSidebar() {
+            const list = document.getElementById('company-list');
+            list.innerHTML = ''; // Limpiar
+
+            Object.keys(appData).forEach(empresa => {
+                const btn = document.createElement('button');
+                btn.className = `w-full text-left px-4 py-3 rounded-lg font-medium transition-colors border ${currentCompany === empresa ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-white border-transparent text-slate-600 hover:bg-slate-50'}`;
+                btn.innerText = empresa;
+                btn.onclick = () => selectCompany(empresa);
+                list.appendChild(btn);
+            });
+        }
+
+        /**
+         * 6. INTERFAZ: SELECCIONAR Y MOSTRAR EMPRESA
+         */
+        function selectCompany(empresaName) {
+            currentCompany = empresaName;
+            const data = appData[empresaName];
+            
+            // Re-renderizar sidebar para actualizar colores de selección
+            renderSidebar();
+
+            // Actualizar Cabecera
+            document.getElementById('display-company-name').innerText = empresaName;
+            document.getElementById('display-company-sector').innerText = data.sector;
+            document.getElementById('display-health-score-text').innerText = `${data.salud}/100`;
+
+            // Actualizar Barra de Salud (Color y Ancho)
+            const healthBar = document.getElementById('health-bar');
+            // Timeout pequeño para que la animación de CSS funcione
+            setTimeout(() => {
+                healthBar.style.width = `${data.salud}%`;
+                if (data.salud >= 70) healthBar.className = "health-bar-fill h-4 rounded-full bg-green-500";
+                else if (data.salud >= 40) healthBar.className = "health-bar-fill h-4 rounded-full bg-yellow-400";
+                else healthBar.className = "health-bar-fill h-4 rounded-full bg-red-500";
+            }, 50);
+
+            // Actualizar Ratios
+            const ratiosGrid = document.getElementById('ratios-grid');
+            ratiosGrid.innerHTML = '';
+
+            data.ratios.forEach(ratio => {
+                // Determinar color de la etiqueta (Semáforo)
+                let colorClass = "bg-slate-100 text-slate-600"; // Default
+                if (ratio.estado.includes('verde')) colorClass = "bg-green-100 text-green-700";
+                if (ratio.estado.includes('amarillo')) colorClass = "bg-yellow-100 text-yellow-700";
+                if (ratio.estado.includes('rojo')) colorClass = "bg-red-100 text-red-700";
+
+                const card = document.createElement('div');
+                card.className = "border border-slate-200 rounded-xl p-5 hover:shadow-md transition-shadow bg-white";
+                card.innerHTML = `
+                    <div class="flex justify-between items-start mb-3">
+                        <h4 class="font-bold text-slate-700">${ratio.nombre}</h4>
+                        <span class="px-2 py-1 rounded text-xs font-bold ${colorClass}">
+                            ${ratio.valor}
+                        </span>
+                    </div>
+                    <p class="text-sm text-slate-600 leading-relaxed">${ratio.interpretacion}</p>
+                `;
+                ratiosGrid.appendChild(card);
+            });
+        }
+
+        /**
+         * 7. LÓGICA DEL MODAL (POP-UP PLAN PRO)
+         */
+        const modal = document.getElementById('pro-modal');
+        const modalContent = document.getElementById('pro-modal-content');
+
+        function openModal() {
+            modal.classList.remove('hidden');
+            // Pequeño retraso para aplicar animación de opacidad
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                modalContent.classList.remove('scale-95');
+            }, 10);
+        }
+
+        function closeModal() {
+            modal.classList.add('opacity-0');
+            modalContent.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300); // Esperar a que termine la transición CSS
+        }
+
+        // Cerrar modal si hacen click fuera de la caja blanca
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) closeModal();
+        });
+    </script>
+</body>
+</html>
